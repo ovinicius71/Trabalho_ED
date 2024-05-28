@@ -6,9 +6,10 @@ struct BT {
     struct Bt *Filhos[(2*D)+1]; 
     int n; 
 };
-
+void cizao(struct BT* x, int i, struct BT* y);
+void printKeys (struct BT* pt_raiz);
 struct BT* busca (int x , struct BT* pt_raiz,int *f, int *g);
-struct BT* novo_no (struct BT *pt_raiz, int x);
+struct BT* novo_no ();
 
 int ler_opcao();
 void menu();
@@ -105,10 +106,63 @@ struct BT* busca (int x , struct BT* pt_raiz,int *f, int *g){
         }
     }
 }
-struct BT* novo_no (struct BT *pt_raiz, int x){
-	struct BT * novo;
-	int f;
-	int g;
+struct BT* novo_no (){
+	struct BT * novo = (struct BT*)malloc(sizeof(struct BT)); // cria um nova pagina
+	novo->n = 0;
+	for (int i; i <= (2*D)+1;i++){ //define seus filhos como NULL
+		novo->Filhos[i] = NULL;
+	}
+	return novo;
 
+}
+void printKeys(struct BT* pt_raiz) {
+    if (pt_raiz != NULL) {	
+        int i;
+        for (i = 0; i < pt_raiz->n; i++) { //percorre todas as chaves da pagina e printandos logo em seguidas
+            printf("%d ", pt_raiz->chave[i]);
+        }
+        for (i = 0; i <= pt_raiz->n; i++) { //percorre todas as paginas e chama a funcao novamente para ela
+            printKeys(pt_raiz->Filhos[i]);
+        }
+    }
+    else{
+        printf("Arvore vazia");
+    }
+}
+int isLeaf(struct BT* pt_raiz) {
+    for (int i = 0; i <= pt_raiz->n; i++) { //percorre todos os filhos da pagina para ver se é folha ou não
+        if (pt_raiz->Filhos[i] != NULL) {
+            return 0;
+        }
+    }
+    return 1;
+}
+void cizao(struct BT* x, int i, struct BT* y) { //X pai , I indice do onde o filho esta, Y filho
+    struct BT* z = novo_no();
+    z->n = D;
 
+    for (int j = 0; j < D; j++) { // chaves da segunda metade de Y sao copiadas para Z
+        z->chave[j] = y->chave[j + D];
+    }
+
+    if (isLeaf(y) == 0) { //Se y for folha os ponteiros para os filhos tmb sao transferidos
+        for (int j = 0; j < D; j++) {
+            z->Filhos[j] = y->Filhos[j + D];
+        }
+    }
+
+    y->n = D; // atualiza a quantidade de chaves
+
+    for (int j = x->n; j >= i + 1; j--) { // ajuste no pai para ganhar um novo filho
+        x->Filhos[j + 1] = x->Filhos[j];
+    }
+
+    x->Filhos[i + 1] = z;
+
+    for (int j = x->n - 1; j >= i; j--) { //ajusta as chaves do pai para armazenar a chave media do filho
+        x->chave[j + 1] = x->chave[j];
+    }
+
+    x->chave[i] = y->chave[D];
+    x->n++;
 }
