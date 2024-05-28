@@ -8,8 +8,11 @@ struct BT {
 };
 void cizao(struct BT* x, int i, struct BT* y);
 void printKeys (struct BT* pt_raiz);
-void buscaB(int x, struct BT* pt_raiz, struct BT** pt, int* f, int* g);
+void busca(int x, struct BT* pt_raiz, struct BT** pt, int* f, int* g);
 struct BT* novo_no ();
+int isLeaf(struct BT* pt_raiz);
+void insert_nfull(struct BT * x, int chave);
+void insert(struct BT ** pag, int chave);
 
 int ler_opcao();
 void menu();
@@ -25,14 +28,20 @@ int main (){
 		switch(opcao) {
 			case 1: {
                 int x;
+                int f, g;
                 printf ("digite o numero a ser incerido: ");
-                scanf ("%d", &x);
+                scanf (" %d", &x);
+                struct BT* pt;
+                busca (x,raiz,&pt,&f,&g);
 
 			}
 			break;
 			
 			case 2: {
-                
+                int val;
+                printf ("digite o valor a ser incerido:");
+                scanf (" %d", &val);
+                insert (&raiz, val);
 			}
 			break;
 			
@@ -76,7 +85,7 @@ void menu() {
 "[9] - Finalizar");
 }
 
-void buscaB(int x, struct BT* pt_raiz, struct BT** pt, int* f, int* g) {
+void busca(int x, struct BT* pt_raiz, struct BT** pt, int* f, int* g) {
     struct BT* p = pt_raiz; //p raiz 
     *pt = NULL;
     *f = 0;
@@ -169,7 +178,7 @@ void insert(struct BT ** pag, int chave) {
     struct BT* r = *pag;
 
     if (r->n == D*2) {
-        struct BT* s = criaNo();
+        struct BT* s = novo_no();
         *pag = s;
         s->Filhos[0] = r;
         cizao(s, 0, r);
