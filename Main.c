@@ -3,18 +3,19 @@
 #define D 2
 struct BT {
     int chave[2*D];
-    struct Bt *Filhos[(2*D)+1]; 
+    struct BT *Filhos[(2*D)+1]; 
     int n; 
 };
 void cizao(struct BT* x, int i, struct BT* y);
 void printKeys (struct BT* pt_raiz);
-struct BT* busca (int x , struct BT* pt_raiz,int *f, int *g);
+void buscaB(int x, struct BT* pt_raiz, struct BT** pt, int* f, int* g);
 struct BT* novo_no ();
 
 int ler_opcao();
 void menu();
 
 int main (){
+    struct BT* raiz = NULL;
     int opcao;
 	
 	while (1) {
@@ -23,14 +24,15 @@ int main (){
 
 		switch(opcao) {
 			case 1: {
-                char name [13];
-                printf ("digite o nome do pokemon desejado: ");
-                scanf ("%c", name);
+                int x;
+                printf ("digite o numero a ser incerido: ");
+                scanf ("%d", &x);
 
 			}
 			break;
 			
 			case 2: {
+                
 			}
 			break;
 			
@@ -40,10 +42,9 @@ int main (){
 			break;
 			
 			case 4: {
-				
+                printKeys(raiz);
 			}
 			break;
-
 
 			case 9: {
 				puts("Finalizando programa ..");
@@ -57,6 +58,7 @@ int main (){
 
 
 int ler_opcao() {
+
 	int opcao;
 	
 	puts("\nEntre com a sua opcao: ");
@@ -70,42 +72,38 @@ void menu() {
 		"[1] - Buscar \n"
 "[2] - Inserir \n"
 "[3] - Remover \n"
+"[4] - printar \n"
 "[9] - Finalizar");
 }
 
-struct BT* busca (int x , struct BT* pt_raiz,int *f, int *g){
-    struct BT* p = pt_raiz; //define p como o ponteiro que percorre a BT e pt_loc vai mostrar aonde esta localizado a chave
-    struct BT* pt_loc = NULL;
-    *f = 0; //ira demonstrar se inserção é valida ou nao tomando f = 0 temos ela como valida e f = 1 como invalida
-    int i;
-	if (pt_raiz == NULL ){
-		*f = 0;
-		
-	}
-    while (p!=NULL){
-        i = 0;
-        *g = 0;
-        pt_loc = p;
-        while (i <= p->n){
-            if (x > p->chave[i]){
-                i = i+1;
-                *g = i;
-            }
-            else if (x == p->chave[i]){
-                p = NULL;
-                *f = 1;
-                i = p->n +2;
-            }
-            else {
-                p = p->Filhos[i-1];
-                i = p->n +2;
-            }
-            if (i = p->n+1){
-                p = p->Filhos[p->n];
+void buscaB(int x, struct BT* pt_raiz, struct BT** pt, int* f, int* g) {
+    struct BT* p = pt_raiz; //p raiz 
+    *pt = NULL;
+    *f = 0;
+
+    while (p != NULL) {
+        int i = 1;
+        *g = 1;
+        *pt = p;
+
+        while (i <= p->n && x > p->chave[i - 1]) {
+            i++;
+            *g = i;
+        }
+
+        if (i <= p->n && x == p->chave[i - 1]) {
+            p = NULL; // Chave encontrada, sair do loop principal
+            *f = 1;
+        } else {
+            if (i == 1) {
+                p = p->Filhos[0];
+            } else {
+                p = p->Filhos[i - 1];
             }
         }
     }
 }
+
 struct BT* novo_no (){
 	struct BT * novo = (struct BT*)malloc(sizeof(struct BT)); // cria um nova pagina
 	novo->n = 0;
@@ -165,4 +163,45 @@ void cizao(struct BT* x, int i, struct BT* y) { //X pai , I indice do onde o fil
 
     x->chave[i] = y->chave[D];
     x->n++;
+}
+
+void insert(struct BT ** pag, int chave) {
+    struct BT* r = *pag;
+
+    if (r->n == D*2) {
+        struct BT* s = criaNo();
+        *pag = s;
+        s->Filhos[0] = r;
+        cizao(s, 0, r);
+        insert_nfull(s, chave);
+    } else {
+        insert_nfull(r, chave);
+    }
+}
+
+void insert_nfull(struct BT * x, int chave) {
+    int i = x->n - 1;
+
+    if (isLeaf(x)) {
+        while (i >= 0 && x->chave[i] > chave) {
+            x->chave[i + 1] = x->chave[i];
+            i--;
+        }
+        x->chave[i + 1] = chave;
+        x->n++;
+    } else {
+        while (i >= 0 && x->chave[i] > chave) {
+            i--;
+        }
+        i++;
+
+        if (x->Filhos[i]->n == 2*D) {
+            cizao(x, i, x->Filhos[i]);
+
+            if (x->chave[i] < chave) {
+                i++;
+            }
+        }
+        insert_nfull(x->Filhos[i], chave);
+    }
 }

@@ -1,29 +1,26 @@
-struct BT* busca (int x , struct BT* pt_raiz,int f, int g){
+void buscaB(int x, struct BT* pt_raiz, struct BT** pt, int* f, int* g) {
     struct BT* p = pt_raiz;
-    struct BT* pt_loc = NULL;
-    f = 0;
-    int i;
+    *pt = NULL;
+    *f = 0;
 
-    while (p!=NULL){
-        i = 0;
-        g = 1;
-        pt_loc = p;
-        while (i <= p->n){
-            if (x > p->chave[i]){
-                i = i+1;
-                g = i;
-            }
-            else if (x == p->chave[i]){
-                p = NULL;
-                f = 1;
-                i = p->n +2;
-            }
-            else {
-                p = p->Filho[i-1];
-                i = p->n +2;
-            }
-            if (i = p->n+1){
-                p = p->Filho[p->n];
+    while (p != NULL) {
+        int i = 1;
+        *g = 1;
+        *pt = p;
+
+        while (i <= p->n && x > p->chave[i - 1]) {
+            i++;
+            *g = i;
+        }
+
+        if (i <= p->n && x == p->chave[i - 1]) {
+            p = NULL; // Chave encontrada, sair do loop principal
+            *f = 1;
+        } else {
+            if (i == 1) {
+                p = p->Filhos[0];
+            } else {
+                p = p->Filhos[i - 1];
             }
         }
     }
