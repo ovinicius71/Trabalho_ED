@@ -1,172 +1,169 @@
 #include <stdio.h>
 #include <stdlib.h>
+
 #define D 2
+
 struct BT {
     int chave[2*D];
-    struct BT *Filhos[(2*D)+1]; 
-    int n; 
+    struct BT *Filhos[(2*D)+1];
+    int n;
 };
-void cizao(struct BT* x, int i, struct BT* y);
-void printKeys (struct BT* pt_raiz);
-void busca(int x, struct BT* pt_raiz, struct BT** pt, int* f, int* g);
-struct BT* novo_no ();
-int isLeaf(struct BT* pt_raiz);
-void insert_nfull(struct BT * x, int chave);
-void insert(struct BT ** pag, int chave);
 
+void cizao(struct BT* x, int i, struct BT* y);
+void printKeys(struct BT* pt_raiz);
+void busca(int x, struct BT* pt_raiz, struct BT** pt, int* f, int* g);
+struct BT* novo_no();
+int isLeaf(struct BT* pt_raiz);
+void insert_nfull(struct BT *x, int chave);
+void insert(struct BT **pag, int chave);
 int ler_opcao();
 void menu();
 
-int main (){
-    struct BT* raiz = NULL;
-    int opcao;
-	
-	while (1) {
-		menu();
-		opcao = ler_opcao();
+int main() {
+    struct BT* raiz = novo_no();
+    int opcao = 0;
 
-		switch(opcao) {
-			case 1: {
+    while (opcao != 9) {
+        menu();
+        opcao = ler_opcao();
+
+        switch(opcao) {
+            case 1: {
                 int x;
                 int f, g;
-                printf ("digite o numero a ser incerido: ");
-                scanf (" %d", &x);
+                printf("Digite o numero a ser inserido: ");
+                scanf("%d", &x);
                 struct BT* pt;
-                busca (x,raiz,&pt,&f,&g);
+                busca(x, raiz, &pt, &f, &g);
+                if (f) {
+                    printf("Elemento %d encontrado na árvore.\n", x);
+                } else {
+                    printf("Elemento %d não encontrado na árvore.\n", x);
+                }
+            }
+            break;
 
-			}
-			break;
-			
-			case 2: {
+            case 2: {
                 int val;
-                printf ("digite o valor a ser incerido:");
-                scanf (" %d", &val);
-                insert (&raiz, val);
-			}
-			break;
-			
-			case 3: {
-				
-			}
-			break;
-			
-			case 4: {
-                printKeys(raiz);
-			}
-			break;
+                printf("Digite o valor a ser inserido: ");
+                scanf("%d", &val);
+                insert(&raiz, val);
+            }
+            break;
 
-			case 9: {
-				puts("Finalizando programa ..");
-				return 0;
-			}
-			break;
-		}
-	}
-	return 0;
+            case 3: {
+                // Implementar a função de remoção se necessário
+            }
+            break;
+
+            case 4: {
+                printKeys(raiz);
+            }
+            break;
+
+            case 9: {
+                puts("Finalizando programa ..");
+                return 0;
+            }
+            break;
+        }
+    }
+    return 0;
 }
 
-
 int ler_opcao() {
-
-	int opcao;
-	
-	puts("\nEntre com a sua opcao: ");
-	scanf("%d%*c", &opcao);
-	
-	return opcao;
+    int opcao;
+    puts("\nEntre com a sua opcao: ");
+    scanf("%d%*c", &opcao);
+    return opcao;
 }
 
 void menu() {
-	puts("\n// ----- // ----- // ARVORE B // ----- // ----- //\n"
-		"[1] - Buscar \n"
-"[2] - Inserir \n"
-"[3] - Remover \n"
-"[4] - printar \n"
-"[9] - Finalizar");
+    puts("\n// ----- // ----- // ARVORE B // ----- // ----- //\n"
+         "[1] - Buscar \n"
+         "[2] - Inserir \n"
+         "[3] - Remover \n"
+         "[4] - Printar \n"
+         "[9] - Finalizar");
 }
 
 void busca(int x, struct BT* pt_raiz, struct BT** pt, int* f, int* g) {
-    struct BT* p = pt_raiz; //p raiz 
+    struct BT* p = pt_raiz;
     *pt = NULL;
     *f = 0;
 
     while (p != NULL) {
-        int i = 1;
-        *g = 1;
+        int i = 0;
+        *g = 0;
         *pt = p;
 
-        while (i <= p->n && x > p->chave[i - 1]) {
+        while (i < p->n && x > p->chave[i]) {
             i++;
             *g = i;
         }
 
-        if (i <= p->n && x == p->chave[i - 1]) {
-            p = NULL; // Chave encontrada, sair do loop principal
+        if (i < p->n && x == p->chave[i]) {
             *f = 1;
+            return;
         } else {
-            if (i == 1) {
-                p = p->Filhos[0];
-            } else {
-                p = p->Filhos[i - 1];
-            }
+            p = p->Filhos[i];
         }
     }
 }
 
-struct BT* novo_no (){
-	struct BT * novo = (struct BT*)malloc(sizeof(struct BT)); // cria um nova pagina
-	novo->n = 0;
-	for (int i; i <= (2*D)+1;i++){ //define seus filhos como NULL
-		novo->Filhos[i] = NULL;
-	}
-	return novo;
-
+struct BT* novo_no() {
+    struct BT* novo = (struct BT*)malloc(sizeof(struct BT));
+    novo->n = 0;
+    for (int i = 0; i <= 2*D; i++) {
+        novo->Filhos[i] = NULL;
+    }
+    return novo;
 }
+
 void printKeys(struct BT* pt_raiz) {
-    if (pt_raiz != NULL) {	
-        int i;
-        for (i = 0; i < pt_raiz->n; i++) { //percorre todas as chaves da pagina e printandos logo em seguidas
+    if (pt_raiz != NULL) {
+        for (int i = 0; i < pt_raiz->n; i++) {
             printf("%d ", pt_raiz->chave[i]);
         }
-        for (i = 0; i <= pt_raiz->n; i++) { //percorre todas as paginas e chama a funcao novamente para ela
+        for (int i = 0; i <= pt_raiz->n; i++) {
+            printf("\nFilho[%d]:", i);
             printKeys(pt_raiz->Filhos[i]);
         }
-    }
-    else{
-        printf("Arvore vazia");
-    }
+    } 
 }
+
 int isLeaf(struct BT* pt_raiz) {
-    for (int i = 0; i <= pt_raiz->n; i++) { //percorre todos os filhos da pagina para ver se é folha ou não
+    for (int i = 0; i <= pt_raiz->n; i++) {
         if (pt_raiz->Filhos[i] != NULL) {
             return 0;
         }
     }
     return 1;
 }
-void cizao(struct BT* x, int i, struct BT* y) { //X pai , I indice do onde o filho esta, Y filho
+
+void cizao(struct BT* x, int i, struct BT* y) {
     struct BT* z = novo_no();
     z->n = D;
 
-    for (int j = 0; j < D; j++) { // chaves da segunda metade de Y sao copiadas para Z
+    for (int j = 0; j < D; j++) {
         z->chave[j] = y->chave[j + D];
     }
 
-    if (isLeaf(y) == 0) { //Se y for folha os ponteiros para os filhos tmb sao transferidos
-        for (int j = 0; j < D; j++) {
+    if (!isLeaf(y)) {
+        for (int j = 0; j <= D; j++) {
             z->Filhos[j] = y->Filhos[j + D];
         }
     }
 
-    y->n = D; // atualiza a quantidade de chaves
+    y->n = D;
 
-    for (int j = x->n; j >= i + 1; j--) { // ajuste no pai para ganhar um novo filho
+    for (int j = x->n; j >= i + 1; j--) {
         x->Filhos[j + 1] = x->Filhos[j];
     }
 
     x->Filhos[i + 1] = z;
 
-    for (int j = x->n - 1; j >= i; j--) { //ajusta as chaves do pai para armazenar a chave media do filho
+    for (int j = x->n - 1; j >= i; j--) {
         x->chave[j + 1] = x->chave[j];
     }
 
@@ -174,10 +171,19 @@ void cizao(struct BT* x, int i, struct BT* y) { //X pai , I indice do onde o fil
     x->n++;
 }
 
-void insert(struct BT ** pag, int chave) {
+void insert(struct BT **pag, int chave) {
     struct BT* r = *pag;
+    int f, g;
+    struct BT* pt;
 
-    if (r->n == D*2) {
+    busca(chave, r, &pt, &f, &g);
+
+    if (f) {
+        printf("A chave %d já existe na árvore.\n", chave);
+        return;
+    }
+
+    if (r->n == 2 * D) {
         struct BT* s = novo_no();
         *pag = s;
         s->Filhos[0] = r;
@@ -188,7 +194,7 @@ void insert(struct BT ** pag, int chave) {
     }
 }
 
-void insert_nfull(struct BT * x, int chave) {
+void insert_nfull(struct BT *x, int chave) {
     int i = x->n - 1;
 
     if (isLeaf(x)) {
@@ -204,7 +210,7 @@ void insert_nfull(struct BT * x, int chave) {
         }
         i++;
 
-        if (x->Filhos[i]->n == 2*D) {
+        if (x->Filhos[i]->n == 2 * D) {
             cizao(x, i, x->Filhos[i]);
 
             if (x->chave[i] < chave) {
