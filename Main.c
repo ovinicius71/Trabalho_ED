@@ -57,6 +57,7 @@ int main() {
             break;
 
             case 4: {
+                printf("raiz:");
                 printKeys(raiz);
             }
             break;
@@ -145,29 +146,32 @@ void cizao(struct BT* x, int i, struct BT* y) {
     struct BT* z = novo_no();
     z->n = D;
 
-    for (int j = 0; j < D; j++) {
-        z->chave[j] = y->chave[j + D];
+    
+    for (int j = 0; j < D; j++) { // Copia as últimas D chaves de y para z
+        z->chave[j] = y->chave[j + D + 1];
     }
 
-    if (!isLeaf(y)) {
+    
+    if (!isLeaf(y)) {   // Se y não é uma folha, copia os últimos D+1 filhos de y para z
         for (int j = 0; j <= D; j++) {
-            z->Filhos[j] = y->Filhos[j + D];
+            z->Filhos[j] = y->Filhos[j + D + 1];
         }
     }
 
-    y->n = D;
-
-    for (int j = x->n; j >= i + 1; j--) {
+    y->n = D;  // Atualiza o número de chaves em y
+    
+    for (int j = x->n; j >= i + 1; j--) { // Move os filhos de x para a direita para abrir espaço para z
         x->Filhos[j + 1] = x->Filhos[j];
     }
 
     x->Filhos[i + 1] = z;
 
-    for (int j = x->n - 1; j >= i; j--) {
+   
+    for (int j = x->n - 1; j >= i; j--) {    // Move as chaves de x para a direita para abrir espaço para a chave do meio
         x->chave[j + 1] = x->chave[j];
     }
 
-    x->chave[i] = y->chave[D];
+    x->chave[i] = y->chave[D]; // Coloca a chave do meio de y em x
     x->n++;
 }
 
