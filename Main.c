@@ -52,7 +52,7 @@ int main() {
             break;
 
             case 3: {
-                // Implementar a função de remoção se necessário
+                
             }
             break;
 
@@ -146,7 +146,6 @@ void cizao(struct BT* x, int i, struct BT* y) {
     struct BT* z = novo_no();
     z->n = D;
 
-    
     for (int j = 0; j < D; j++) { // Copia as últimas D chaves de y para z
         z->chave[j] = y->chave[j + D + 1];
     }
