@@ -147,13 +147,18 @@ void cizao(struct BT* x, int i, struct BT* y) {
     z->n = D;
 
     for (int j = 0; j < D; j++) { // Copia as últimas D chaves de y para z
-        z->chave[j] = y->chave[j + D + 1];
+        if (j == 0){
+            z->chave[j] = y->chave[j+ 1 + D ];
+        }
+        else{
+        z->chave[j] = y->chave[j + D ];
+        }
     }
 
     
     if (!isLeaf(y)) {   // Se y não é uma folha, copia os últimos D+1 filhos de y para z
         for (int j = 0; j <= D; j++) {
-            z->Filhos[j] = y->Filhos[j + D + 1];
+            z->Filhos[j] = y->Filhos[j + D ];
         }
     }
 
@@ -163,7 +168,7 @@ void cizao(struct BT* x, int i, struct BT* y) {
         x->Filhos[j + 1] = x->Filhos[j];
     }
 
-    x->Filhos[i + 1] = z;
+    x->Filhos[i ] = z;
 
    
     for (int j = x->n - 1; j >= i; j--) {    // Move as chaves de x para a direita para abrir espaço para a chave do meio
@@ -179,41 +184,41 @@ void insert(struct BT **pag, int chave) {
     int f, g;
     struct BT* pt;
 
-    busca(chave, r, &pt, &f, &g);
+    busca(chave, r, &pt, &f, &g); // verifica se a chave ja foi inserida
 
     if (f) {
-        printf("A chave %d já existe na árvore.\n", chave);
+        printf("A chave %d ja existe na arvore.\n", chave);
         return;
     }
 
-    if (r->n == 2 * D) {
+    if (r->n == 2 * D) { //verifica se a raiz esta cheia 
         struct BT* s = novo_no();
-        *pag = s;
-        s->Filhos[0] = r;
+        *pag = s; //atualiza a raiz     
+        s->Filhos[0] = r; //raiz antiga vira o primeiro filho da nova
         cizao(s, 0, r);
-        insert_nfull(s, chave);
+        insert_nfull(s, chave); //insere a chave na nova raiz
     } else {
         insert_nfull(r, chave);
     }
 }
 
 void insert_nfull(struct BT *x, int chave) {
-    int i = x->n - 1;
+    int i = x->n - 1; //inicicializa I com o indice da ultima chave da pagina
 
-    if (isLeaf(x)) {
-        while (i >= 0 && x->chave[i] > chave) {
-            x->chave[i + 1] = x->chave[i];
+    if (isLeaf(x)) { // se a pagina for uma folha a chave sera incerida diretamente nesta pagina 
+        while (i >= 0 && x->chave[i] > chave) { // buscando a posicao correta para a chave
+            x->chave[i + 1] = x->chave[i]; 
             i--;
         }
-        x->chave[i + 1] = chave;
+        x->chave[i + 1] = chave; //insere a nova chave
         x->n++;
-    } else {
+    } else { // se nao for folha deve-se cacar o filho apropriado para a insercao do da chave
         while (i >= 0 && x->chave[i] > chave) {
             i--;
         }
         i++;
 
-        if (x->Filhos[i]->n == 2 * D) {
+        if (x->Filhos[i]->n == 2 * D) {// se o filho estiver cheio ent aplica a cizao na pagina e verifica em qual filho inserir
             cizao(x, i, x->Filhos[i]);
 
             if (x->chave[i] < chave) {
