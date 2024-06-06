@@ -115,7 +115,7 @@ void busca(int x, struct BT* pt_raiz, struct BT** pt, int* f, int* g) {
 struct BT* novo_no() {
     struct BT* novo = (struct BT*)malloc(sizeof(struct BT));
     novo->n = 0;
-    for (int i = 0; i <= 2*D; i++) {
+    for (int i = 0; i <= 2*D+1; i++) {
         novo->Filhos[i] = NULL;
     }
     return novo;
@@ -144,20 +144,26 @@ int isLeaf(struct BT* pt_raiz) {
 
 void cizao(struct BT* x, int i, struct BT* y) {
     struct BT* z = novo_no();
-    z->n = D;
+    z->n = D-1;
 
     for (int j = 0; j < D; j++) { // Copia as últimas D chaves de y para z
         if (j == 0){
-            z->chave[j] = y->chave[j+ 1 + D ];
+            continue;
         }
         else{
-        z->chave[j] = y->chave[j + D ];
+            if (z->chave[j-2] == y->chave[D+1] ){
+                continue;
+            }
+            else{
+                z->chave[j-1] = y->chave[D+1];
+            }
+        
         }
     }
 
     
     if (!isLeaf(y)) {   // Se y não é uma folha, copia os últimos D+1 filhos de y para z
-        for (int j = 0; j <= D; j++) {
+        for (int j = 0; j < D; j++) {
             z->Filhos[j] = y->Filhos[j + D ];
         }
     }
@@ -168,7 +174,7 @@ void cizao(struct BT* x, int i, struct BT* y) {
         x->Filhos[j + 1] = x->Filhos[j];
     }
 
-    x->Filhos[i ] = z;
+    x->Filhos[i + 1] = z;
 
    
     for (int j = x->n - 1; j >= i; j--) {    // Move as chaves de x para a direita para abrir espaço para a chave do meio
