@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -9,14 +8,7 @@ struct BT {
     struct BT *Filhos[(2*D)+1];
     int n;
 };
-void remove_s_folha(struct BT *no, int idx);
-void remove_n_folha(struct BT *no, int idx);
-void removeNo(struct BT *no, int k);
-void preencher(struct BT *no, int idx);
-void empresta_ant(struct BT *no, int idx);
-void empresta_prox(struct BT *no, int idx);
-void removeChave(struct BT *no, int idx);
-void merge(struct BT *no, int idx);
+
 void cizao(struct BT* x, int i, struct BT* y);
 void printKeys(struct BT* pt_raiz);
 void busca(int x, struct BT* pt_raiz, struct BT** pt, int* f, int* g);
@@ -26,6 +18,22 @@ void insert_nfull(struct BT *x, int chave);
 void insert(struct BT **pag, int chave);
 int ler_opcao();
 void menu();
+int isLeaf(struct BT* pt_raiz);
+// Função para remover uma chave da árvore B
+void remove_key(struct BT* root, int x);
+
+// Função para realizar a concatenação de duas páginas irmãs
+void concatenate(struct BT* parent, int index);
+
+// Função para realizar a redistribuição de chaves entre duas páginas irmãs
+void redistribute(struct BT* parent, int index);
+
+// Função auxiliar para encontrar o sucessor de uma chave na árvore B
+int find_successor(struct BT* root);
+
+// Função para buscar uma chave na árvore B e remover, se existir
+void search_and_remove(struct BT* root, int x);
+
 
 int main() {
     struct BT* raiz = novo_no();
@@ -62,8 +70,7 @@ int main() {
             case 3: {
                 int val;
                 scanf("%d", &val);
-                removeNo(raiz,val);
-                
+                search_and_remove(raiz,val);
             }
             break;
 
@@ -157,7 +164,7 @@ void cizao(struct BT* x, int i, struct BT* y) {
     struct BT* z = novo_no();
     z->n = D-1;
 
-    for (int j = 0; j < D; j++) { // Copia as últimas D chave de y para z
+    for (int j = 0; j < D; j++) { // Copia as últimas D chaves de y para z
         if (j == 0){
             continue;
         }
@@ -173,22 +180,22 @@ void cizao(struct BT* x, int i, struct BT* y) {
     }
 
     
-    if (!isLeaf(y)) {   // Se y não é uma folha, copia os últimos D+1 Filhos de y para z
+    if (!isLeaf(y)) {   // Se y não é uma folha, copia os últimos D+1 filhos de y para z
         for (int j = 0; j < D; j++) {
             z->Filhos[j] = y->Filhos[j + D ];
         }
     }
 
-    y->n = D;  // Atualiza o número de chave em y
+    y->n = D;  // Atualiza o número de chaves em y
     
-    for (int j = x->n; j >= i + 1; j--) { // Move os Filhos de x para a direita para abrir espaço para z
+    for (int j = x->n; j >= i + 1; j--) { // Move os filhos de x para a direita para abrir espaço para z
         x->Filhos[j + 1] = x->Filhos[j];
     }
 
     x->Filhos[i + 1] = z;
 
    
-    for (int j = x->n - 1; j >= i; j--) {    // Move as chave de x para a direita para abrir espaço para a chave do meio
+    for (int j = x->n - 1; j >= i; j--) {    // Move as chaves de x para a direita para abrir espaço para a chave do meio
         x->chave[j + 1] = x->chave[j];
     }
 
@@ -245,208 +252,148 @@ void insert_nfull(struct BT *x, int chave) {
         insert_nfull(x->Filhos[i], chave);
     }
 }
-// Função para remover uma chave de um nó da B-tree
-void removeChave(struct BT *no, int idx) {
-    for (int i = idx + 1; i < no->n; ++i) {
-        no->chave[i - 1] = no->chave[i];
-    }
-    no->n--;
+
+void remove_key(struct BT* root, int x) {
+    if (root == NULL)
+        return;
+    
+    search_and_remove(root, x);
 }
 
-// Função para obter o índice da primeira chave maior ou igual a k
-int acha_chave(struct BT *no, int k) {
-    int idx = 0;
-    while (idx < no->n && no->chave[idx] < k) {
-        ++idx;
-    }
-    return idx;
-}
+void search_and_remove(struct BT* root, int x) {
+    int i = 0;
+    while (i < root->n && x > root->chave[i])
+        i++;
+    
+    if (i < root->n && x == root->chave[i]) {
+        // Remover a chave x encontrada
+        for (int j = i; j < root->n - 1; j++)
+            root->chave[j] = root->chave[j+1];
+        root->n--;
 
-// Função para remover uma chave de um nó que não é folha
-void remove_n_folha(struct BT *no, int idx) {
-    int k = no->chave[idx];
-
-    // Se o filho à esquerda (predecessor) tem pelo menos D chave
-    if (no->Filhos[idx]->n >= D) {
-        // Encontrar o predecessor (maior chave no subárvore esquerda)
-        struct BT *cur = no->Filhos[idx];
-        while (!isLeaf(cur)) {
-            cur = cur->Filhos[cur->n];
-        }
-        int pred = cur->chave[cur->n - 1];
-        no->chave[idx] = pred;
-        removeNo(no->Filhos[idx], pred);
-    }
-    // Se o filho à direita (sucessor) tem pelo menos D chave
-    else if (no->Filhos[idx + 1]->n >= D) {
-        // Encontrar o sucessor (menor chave no subárvore direita)
-        struct BT *cur = no->Filhos[idx + 1];
-        while (!isLeaf(cur)) {
-            cur = cur->Filhos[0];
-        }
-        int succ = cur->chave[0];
-        no->chave[idx] = succ;
-        removeNo(no->Filhos[idx + 1], succ);
-    }
-    // Se ambos os Filhos têm menos de D chave, fundi-los
-    else {
-        // Fundir no->chave[idx] e no->Filhos[idx + 1] em no->Filhos[idx]
-        struct BT *child = no->Filhos[idx];
-        struct BT *irmao = no->Filhos[idx + 1];
-
-        // Puxar a chave do meio para child
-        child->chave[child->n] = k;
-        for (int i = 0; i < irmao->n; ++i) {
-            child->chave[i + child->n + 1] = irmao->chave[i];
-        }
-        if (!isLeaf(child)) {
-            for (int i = 0; i <= irmao->n; ++i) {
-                child->Filhos[i + child->n + 1] = irmao->Filhos[i];
+        // Verificar se a página ficou com menos chaves que o mínimo
+        if (root->n < D) {
+            // Se a página é uma folha, não pode ocorrer redistribuição, apenas concatenação
+            if (isLeaf(root)) {
+                concatenate(root,i);
+                // Concatenar ou redistribuir com irmãos
+                // A implementação da função concatenate e redistribute é necessária
+                printf("Executar operação de concatenação ou redistribuição\n");
+            } else {
+                // Buscar sucessor na árvore e substituir a chave removida pelo sucessor
+                int successor = find_successor(root);
+                search_and_remove(root, successor);
+                root->chave[i] = successor;
             }
         }
-
-        child->n += irmao->n + 1;
-        removeChave(no, idx);
-        free(irmao);
-        removeNo(child, k);
-    }
-}
-
-// Função para remover uma chave de uma folha
-void remove_s_folha(struct BT *no, int idx) {
-    removeChave(no, idx);
-}
-
-// Função principal para remover uma chave
-void removeNo(struct BT *no, int k) {
-    int idx = acha_chave(no, k);
-
-    // A chave a ser removida está presente neste nó
-    if (idx < no->n && no->chave[idx] == k) {
-        if (isLeaf(no)) {
-            remove_s_folha(no, idx);
-        } else {
-            remove_n_folha(no, idx);
-        }
     } else {
-        // Se este nó é uma folha, então a chave não está presente na árvore
-        if (isLeaf(no)) {
-            printf("A chave %d não está presente na árvore\n", k);
+        // Se não encontrou a chave na página atual, descer na árvore
+        if (isLeaf(root))
             return;
-        }
-
-        // O nó filho onde a chave pode estar presente
-        bool flag = (idx == no->n);
-
-        // Se o filho onde a chave pode estar tem menos de D chave, preenche
-        if (no->Filhos[idx]->n < D) {
-            preencher(no, idx);
-        }
-
-        // Se o último filho foi fundido, ele deve ter sido fundido com o filho anterior
-        // Portanto, recursivamente remover da posição anterior
-        if (flag && idx > no->n) {
-            removeNo(no->Filhos[idx - 1], k);
-        } else {
-            removeNo(no->Filhos[idx], k);
-        }
+        search_and_remove(root->Filhos[i], x);
     }
 }
 
-// Função auxiliar para preencher um nó filho que tem menos de D chave
-void preencher(struct BT *no, int idx) {
-    if (idx != 0 && no->Filhos[idx - 1]->n >= D) {
-        empresta_ant(no, idx);
-    } else if (idx != no->n && no->Filhos[idx + 1]->n >= D) {
-        empresta_prox(no, idx);
+int find_successor(struct BT* root) {
+    // Percorre a árvore B até encontrar a folha mais à esquerda
+    while (!isLeaf(root))
+        root = root->Filhos[0];
+    // O sucessor é a primeira chave da folha mais à esquerda
+    return root->chave[0];
+}
+
+void concatenate(struct BT* parent, int index) {
+    // Verificar se os índices são válidos
+    if (index < 0 || index >= parent->n || index >= 2*D - 1) {
+        printf("Índice inválido para concatenar páginas irmãs.\n");
+        return;
+    }
+
+    // Obter as páginas irmãs
+    struct BT* left_sibling = parent->Filhos[index];
+    struct BT* right_sibling = parent->Filhos[index + 1];
+
+    // Verificar se as páginas irmãs não estão cheias
+    if (left_sibling->n + right_sibling->n >= 2*D) {
+        printf("As páginas irmãs estão cheias. Não é possível concatenar.\n");
+        return;
+    }
+
+    // Transferir todas as chaves do irmão direito para o irmão esquerdo
+    for (int i = 0; i < right_sibling->n; i++) {
+        left_sibling->chave[left_sibling->n - i] = right_sibling->chave[i];
+    }
+
+    // Atualizar o número de chaves no irmão esquerdo
+    left_sibling->n += right_sibling->n;
+
+    // Se o nó não for uma folha, transferir os ponteiros também
+    if (!isLeaf(left_sibling)) {
+        for (int i = 0; i <= right_sibling->n; i++) {
+            left_sibling->Filhos[left_sibling->n + i] = right_sibling->Filhos[i];
+        }
+    }
+
+    // Remover o ponteiro do pai para o irmão direito
+    for (int i = index + 1; i < parent->n; i++) {
+        parent->Filhos[i] = parent->Filhos[i + 1];
+    }
+
+    // Atualizar o número de chaves no pai
+    parent->n--;
+
+    // Liberar a memória do irmão direito
+    free(right_sibling);
+
+    printf("Executar operação de concatenação.\n");
+}
+void redistribute(struct BT* parent, int index) {
+    // Verificar se os índices são válidos
+    if (index < 0 || index >= parent->n || index >= 2*D - 1) {
+        printf("Índice inválido para redistribuir chaves entre páginas irmãs.\n");
+        return;
+    }
+
+    // Obter as páginas irmãs
+    struct BT* left_sibling = parent->Filhos[index];
+    struct BT* right_sibling = parent->Filhos[index + 1];
+
+    // Verificar se as páginas irmãs não têm chaves suficientes para redistribuir
+    if (left_sibling->n + right_sibling->n < 2*D) {
+        printf("As páginas irmãs não têm chaves suficientes para redistribuição.\n");
+        return;
+    }
+
+    // Realizar redistribuição de chaves entre os irmãos
+    if (left_sibling->n < right_sibling->n) {
+        // Transferir a chave do pai para o irmão esquerdo
+        left_sibling->chave[left_sibling->n] = parent->chave[index];
+        left_sibling->n++;
+
+        // Atualizar a chave do pai para a primeira chave do irmão direito
+        parent->chave[index] = right_sibling->chave[0];
+
+        // Mover todas as outras chaves no irmão direito uma posição para a esquerda
+        for (int i = 0; i < right_sibling->n - 1; i++) {
+            right_sibling->chave[i] = right_sibling->chave[i + 1];
+        }
+
+        // Atualizar o número de chaves no irmão direito
+        right_sibling->n--;
     } else {
-        if (idx != no->n) {
-            merge(no, idx);
-        } else {
-            merge(no, idx - 1);
+        // Transferir a chave do pai para o irmão direito
+        for (int i = right_sibling->n; i > 0; i--) {
+            right_sibling->chave[i] = right_sibling->chave[i - 1];
         }
-    }
-}
+        right_sibling->chave[0] = parent->chave[index];
+        right_sibling->n++;
 
-// Função auxiliar para emprestar uma chave do nó filho anterior
-void empresta_ant(struct BT *no, int idx) {
-    struct BT *child = no->Filhos[idx];
-    struct BT *irmao = no->Filhos[idx - 1];
+        // Atualizar a chave do pai para a última chave do irmão esquerdo
+        parent->chave[index] = left_sibling->chave[left_sibling->n - 1];
 
-    for (int i = child->n - 1; i >= 0; --i) {
-        child->chave[i + 1] = child->chave[i];
+        // Atualizar o número de chaves no irmão esquerdo
+        left_sibling->n--;
     }
 
-    if (!isLeaf(child)) {
-        for (int i = child->n; i >= 0; --i) {
-            child->Filhos[i + 1] = child->Filhos[i];
-        }
-    }
-
-    child->chave[0] = no->chave[idx - 1];
-
-    if (!isLeaf(child)) {
-        child->Filhos[0] = irmao->Filhos[irmao->n];
-    }
-
-    no->chave[idx - 1] = irmao->chave[irmao->n - 1];
-    child->n += 1;
-    irmao->n -= 1;
-}
-
-// Função auxiliar para emprestar uma chave do nó filho próximo
-void empresta_prox(struct BT *no, int idx) {
-    struct BT *child = no->Filhos[idx];
-    struct BT *irmao = no->Filhos[idx + 1];
-
-    child->chave[child->n] = no->chave[idx];
-
-    if (!isLeaf(child)) {
-        child->Filhos[child->n + 1] = irmao->Filhos[0];
-    }
-
-    no->chave[idx] = irmao->chave[0];
-
-    for (int i = 1; i < irmao->n; ++i) {
-        irmao->chave[i - 1] = irmao->chave[i];
-    }
-
-    if (!isLeaf(irmao)) {
-        for (int i = 1; i <= irmao->n; ++i) {
-            irmao->Filhos[i - 1] = irmao->Filhos[i];
-        }
-    }
-
-    child->n += 1;
-    irmao->n -= 1;
-}
-
-// Função auxiliar para fundir dois nós Filhos
-void merge(struct BT *no, int idx) {
-    struct BT *child = no->Filhos[idx];
-    struct BT *irmao;
-    child->chave[D - 1] = no->chave[idx];
-
-    for (int i = 0; i < irmao->n; ++i) {
-        child->chave[i + D] = irmao->chave[i];
-    }
-
-    if (!isLeaf(child)) {
-        for (int i = 0; i <= irmao->n; ++i) {
-            child->Filhos[i + D] = irmao->Filhos[i];
-        }
-    }
-
-    for (int i = idx + 1; i < no->n; ++i) {
-        no->chave[i - 1] = no->chave[i];
-    }
-
-    for (int i = idx + 2; i <= no->n; ++i) {
-        no->Filhos[i - 1] = no->Filhos[i];
-    }
-
-    child->n += irmao->n + 1;
-    no->n--;
-
-    free(irmao);
+    printf("Executar operação de redistribuição.\n");
 }
